@@ -24,7 +24,7 @@ import           Data.Monoid          ((<>))
 import qualified Data.Text            as T (break, cons, null, pack, singleton, snoc, span, unpack)
 import           Data.Tuple           (swap)
 import           Yi.Event
-import           Yi.Keymap.Keys       (char, ctrl, meta, spec)
+import           Yi.Keymap.Keys       (char, ctrl, meta, spec, super)
 import           Yi.Keymap.Vim.Common (EventString (Ev), RepeatableAction (RepeatableAction))
 import           Yi.String            (showT)
 
@@ -58,6 +58,7 @@ stringToEvent "<C-@>" = (Event (KASCII ' ') [MCtrl])
 stringToEvent s@('<':'C':'-':_) = stringToEvent' 3 s ctrl
 stringToEvent s@('<':'M':'-':_) = stringToEvent' 3 s meta
 stringToEvent s@('<':'a':'-':_) = stringToEvent' 3 s meta
+stringToEvent s@('<':'S':'-':_) = stringToEvent' 3 s super
 stringToEvent "<lt>" = char '<'
 stringToEvent [c] = char c
 stringToEvent ('<':'F':d:'>':[]) | isDigit d = spec (KFun $ read [d])
@@ -90,6 +91,7 @@ eventToEventString e = case e of
       []      -> Ev $ '<' `T.cons` s `T.snoc` '>'
       [MCtrl] -> Ev $ "<C-" <> s `T.snoc` '>'
       [MMeta] -> Ev $ "<M-" <> s `T.snoc` '>'
+      [MSuper] -> Ev $ "<S-" <> s `T.snoc` '>'
       _ -> error $ "Couldn't convert event <" ++ show v
                    ++ "> to string, because of unknown modifiers"
     Nothing -> error $ "Couldn't convert event <" ++ show v ++ "> to string"
@@ -97,6 +99,7 @@ eventToEventString e = case e of
   where
     f MCtrl = 'C'
     f MMeta = 'M'
+    f MSuper = 'S'
     f _     = '×'
     mkMod m c = '<' `T.cons` f m `T.cons` '-'
                 `T.cons` c `T.cons` T.singleton '>'
